@@ -1,0 +1,58 @@
+<?xml version="1.0"?>
+<!DOCTYPE MxML>
+<MxML version="1-1">
+<events>
+    <mainEvent>
+        <action>insertion</action>
+        <object href="#contract_-99">
+            <objectNature>contract</objectNature>
+        </object>
+        <inputBy>
+            <userName>NGK</userName>
+            <group>FO_DER_HAS</group>
+        </inputBy>
+    </mainEvent>
+</events>
+<contracts>
+    <contract mefclass="mxContractISINGLE" id="contract_-99"/>
+</contracts>
+<dealings>
+    <dealing>
+        <remoteEdition>
+            <businessObject mefClass="mxCpontractISINGLE" mefClassInstanceType="8.000000" href="$contract_-99">
+                <flatObject>
+                    <memberValuePairs>
+                        <member path="Bid/Ask">Mid</member>
+                        <member path="One side">N</member>
+                        <member path="Price on request">N</member>
+                        <member path="Flat member based">Yes</member>
+                        <member path="Title based">Yes</member>
+                        <member path="Typology id based">Yes</member>
+                        <member path="Evalution date">20210429</member>
+                        <member path="Sliding trading date">Y</member>
+                    </memberValuePairs>
+                </flatObject>
+            </businessObject>
+            <modifiedMembers>
+                <memberValuePairs>
+                    <member path="AUX">SS_UPLOAD</member>
+                    <member path="Instrument">CNH</member>
+                    <member path="Payout">Lend</member>
+                    <member path="Trading date">20120427</member>
+                    <member path="Start label">20120427</member>
+                    <member path="Maturity label">20230305</member>
+                    <member path="Portfolio">MM_RCD013_HAS</member>
+                    <member path="Counterpart">HAS0005HKH</member>
+                    <member path="TRANSFRATE">3.5</member>
+                    <member path="Typology">MMLOAN</member>
+                    <member path="Usage"></member>
+                    <member path="Comment"></member>
+                    <member path="COMMITYP"></member>
+                    <member path="CODE">FREE</member>
+                    <member path="TRADECHNL">PHONE</member>
+                </memberValuePairs>
+            </modifiedMembers>
+        </remoteEdition>
+    </dealing>
+</dealings>
+</MxML>
