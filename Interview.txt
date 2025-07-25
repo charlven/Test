@@ -1,0 +1,100 @@
+多线程
+- 新建 T1、T2、T3 三个线程，如何保证它们按顺序执行？
+用 join 方法。
+
+- 怎么控制同一时间只有 3 个线程运行？
+用 Semaphore。
+
+- 什么是原子性、可见性、有序性？
+原子性、可见性、有序性是多线程编程中最重要的几个知识点，由于多线程情况复杂，如何让每个线程能看到正确的结果，这是非常重要的。
+原子性原子性是指一个线程的操作是不能被其他线程打断，同一时间只有一个线程对一个变量进行操作。在多线程情况下，每个线程的执行结果不受其他线程的干扰，比如说多个线程同时对同一个共享成员变量 n++100 次，如果n 初始值为0，n 最后的值应该是 100，所以说它们是互不干扰的，这就是传说的中的原子性。但n++并不是原子性的操作，要使用 AtomicInteger 保证原子性。
+可见性可见性是指某个线程修改了某一个共享变量的值，而其他线程是否可以看见该共享变量修改后的值。在单线程中肯定不会有这种问题，单线程读到的肯定都是最新的值，而在多线程编程中就不一定了。每个线程都有自己的工作内存，线程先把共享变量的值从主内存读到工作内存，形成一个副本，当计算完后再把副本的值刷回主内存，从读取到最后刷回主内存这是一个过程，当还没刷回主内存的时候这时候对其他线程是不可见的，所以其他线程从主内存读到的值是修改之前的旧值。像CPU 的缓存优化、硬件优化、指令重排及对 JVM 编译器的优化，都会出现可见性的问题。
+有序性我们都知道程序是按代码顺序执行的，对于单线程来说确实是如此，但在多线程情况下就不是如此了。为了优化程序执行和提高 CPU 的处理性能，JVM和操作系统都会对指令进行重排，也就说前面的代码并不一定都会在后面的代码前面执行，即后面的代码可能会插到前面的代码之前执行，只要不影响当前线程的执行结果。所以，指令重排只会保证当前线程执行结果一致，但指令重排后势必会影响多线程的执行结果。虽然重排序优化了性能，但也是会遵守一些规则的，并不能随便乱排序，只是重排序会影响多线程执行的结果。
+
+- Fork/Join 框架是干什么的？有什么需要注意的？
+大任务自动分散小任务，并发执行，合并小任务结果。线程太多，线程数量堆积。系统性能下降，栈内存可能溢出。
+
+- 线程数过多会造成什么异常？
+线程过多会造成栈溢出，也有可能会造成堆异常。
+
+- 什么是 CAS 算法？在多线程中有哪些应用。
+CAS，全称为 Compare and Swap，即比较-替换。假设有三个操作数：内存值V、旧的预期值 A、要修改的值 B，当且仅当预期值 A 和内存值V 相同时，才会将内存值修改为 B 并返回 true，否则什么都不做并返回 false。当然CAS 一定要volatile变量配合，这样才能保证每次拿到的变量是主内存中最新的那个值，否则旧的预期值 A 对某条线程来说，永远是一个不会变的值 A，只要某次CAS 操作失败，永远都不可能成功。java.util.concurrent.atomic 包下面的 Atom****类都有 CAS 算法的应用。
+
+- 说几个常用的 Lock 接口实现锁。
+ReentrantLock、ReadWriteLock
+
+-怎么唤醒一个阻塞的线程？
+如果线程是因为调用了 wait()、sleep()或者 join()方法而导致的阻塞，可以中断线程，并且通过抛出 InterruptedException 来唤醒它；如果线程遇到了IO 阻塞，无能为力，因为 IO是操作系统实现的，Java 代码并没有办法直接接触到操作系统。
+
+
+-----------------------------------------------------------------------
+JVM
+- 强引用、软引用、弱引用、虚引用是什么，有什么区别？
+强引用，就是普通的对象引用关系，如 String s = new String("ConstXiong"). 发生 gc 的时候不会被回收。
+软引用，用于维护一些可有可无的对象。只有在内存不足时，系统则会回收软引用对象，如果回收了软引用对象之后仍然没有足够的内存，才会抛出内存溢出异常。SoftReference 实现
+弱引用，相比软引用来说，要更加无用一些，它拥有更短的生命周期，当 JVM 进行垃圾回收时，无论内存是否充足，都会回收被弱引用关联的对象。WeakReference 实现。有用但不是必须的对象，在下一次GC时会被回收。
+虚引用是一种形同虚设的引用，在现实场景中用的不是很多，它主要用来跟踪对象被垃圾回收的活动。PhantomReference 实现
+
+- 工作中常用的 JVM 配置参数有哪些？
+Java 8 为例
+日志 -XX:+PrintFlagsFinal，打印JVM所有参数的值 -XX:+PrintGC，打印GC信息 -XX:+PrintGCDetails，打印GC详细信息 -XX:+PrintGCTimeStamps，打印GC的时间戳 -Xloggc:filename，设置GC log文件的位置 -XX:+PrintTenuringDistribution，查看熬过收集后剩余对象的年龄分布信息
+内存设置 -Xms，设置堆的初始化内存大小 -Xmx，设置堆的最大内存 -Xmn，设置新生代内存大小 -Xss，设置线程栈大小 -XX:NewRatio，新生代与老年代比值 -XX:SurvivorRatio，新生代中Eden区与两个Survivor区的比值，默认为8，即Eden:Survivor:Survivor=8:1:1 -XX:MaxTenuringThreshold，从年轻代到老年代，最大晋升年龄。CMS 下默认为 6，G1 下默认为 15 -XX:MetaspaceSize，设置元空间的大小，第一次超过将触发 GC -XX:MaxMetaspaceSize，元空间最大值 -XX:MaxDirectMemorySize，用于设置直接内存的最大值，限制通过 DirectByteBuffer 申请的内存 -XX:ReservedCodeCacheSize，用于设置 JIT 编译后的代码存放区大小，如果观察到这个值有限制，可以适当调大，一般够用即可
+设置垃圾收集相关 -XX:+UseSerialGC，设置串行收集器 -XX:+UseParallelGC，设置并行收集器 -XX:+UseConcMarkSweepGC，使用CMS收集器 -XX:ParallelGCThreads，设置Parallel GC的线程数 -XX:MaxGCPauseMillis，GC最大暂停时间 ms -XX:+UseG1GC，使用G1垃圾收集器
+CMS 垃圾回收器相关 -XX:+UseCMSInitiatingOccupancyOnly -XX:CMSInitiatingOccupancyFraction，与前者配合使用，指定MajorGC的发生时机 -XX:+ExplicitGCInvokesConcurrent，代码调用 System.gc() 开始并行 FullGC，建议加上这个参数 -XX:+CMSScavengeBeforeRemark，表示开启或关闭在 CMS 重新标记阶段之前的清除（YGC）尝试，它可以降低 remark 时间，建议加上 -XX:+ParallelRefProcEnabled，可以用来并行处理 Reference，以加快处理速度，缩短耗时
+G1 垃圾回收器相关 -XX:MaxGCPauseMillis，用于设置目标停顿时间，G1 会尽力达成 -XX:G1HeapRegionSize，用于设置小堆区大小，建议保持默认 -XX:InitiatingHeapOccupancyPercent，表示当整个堆内存使用达到一定比例（默认是 45%），并发标记阶段就会被启动 -XX:ConcGCThreads，表示并发垃圾收集器使用的线程数量，默认值随 JVM 运行的平台不同而变动，不建议修改
+建议面试时最好能记住 CMS 和 G1的参数，特点突出使用较多，被问的概率大
+
+- 如何开启和查看 GC 日志？
+常见的 GC 日志开启参数包括： -Xloggc:filename，指定日志文件路径 -XX:+PrintGC，打印 GC 基本信息 -XX:+PrintGCDetails，打印 GC 详细信息 -XX:+PrintGCTimeStamps，打印 GC 时间戳 -XX:+PrintGCDateStamps，打印 GC 日期与时间 -XX:+PrintHeapAtGC，打印 GC 前后的堆、方法区、元空间可用容量变化 -XX:+PrintTenuringDistribution，打印熬过收集后剩余对象的年龄分布信息，有助于 MaxTenuringThreshold 参数调优设置 -XX:+PrintAdaptiveSizePolicy，打印收集器自动设置堆空间各分代区域大小、收集目标等自动调节的相关信息 -XX:+PrintGCApplicationConcurrentTime，打印 GC 过程中用户线程并发时间 -XX:+PrintGCApplicationStoppedTime，打印 GC 过程中用户线程停顿时间 -XX:+HeapDumpOnOutOfMemoryError，堆 oom 时自动 dump -XX:HeapDumpPath，堆 oom 时 dump 文件路径
+Java 9 JVM 日志模块进行了重构，参数格式发生变化，这个需要知道。
+GC 日志输出的格式，会随着上面的参数不同而发生变化。关注各个分代的内存使用情况、垃圾回收次数、垃圾回收的原因、垃圾回收占用的时间、吞吐量、用户线程停顿时间。
+借助工具可视化工具可以更方便的分析，在线工具 GCeasy；离线版可以使用 GCViewer。
+如果现场环境不允许，可以使用 JDK 自带的 jstat 工具监控观察 GC 情况。
+
+----------------------------------------------------------------------------------------
+SpringBoot
+
+- 如何在 Spring Boot 启动的时候运行一些特定的代码？
+可以实现接口 ApplicationRunner 或者 CommandLineRunner，这两个接口实现方式一样，它们都只提供了一个 run 方法
+
+- 什么是 Spring Profiles？
+在项目的开发中，有些配置文件在开发、测试或者生产等不同环境中可能是不同的，例如数据库连接、redis的配置等等。那我们如何在不同环境中自动实现配置的切换呢？Spring给我们提供了profiles机制给我们提供的就是来回切换配置文件的功能
+Spring Profiles 允许用户根据配置文件（dev，test，prod 等）来注册 bean。因此，当应用程序在开发中运行时，只有某些 bean 可以加载，而在 PRODUCTION中，某些其他 bean 可以加载。假设我们的要求是 Swagger 文档仅适用于 QA 环境，并且禁用所有其他文档。这可以使用配置文件来完成。Spring Boot 使得使用配置文件非常简单。
+
+- Eureka和ZooKeeper都可以提供服务注册与发现的功能,请说说两个的区别
+1、 ZooKeeper中的节点服务挂了就要选举在选举期间注册服务瘫痪,虽然服务最终会恢复,但是选举期；间不可用的， 选举就是改微服务做了集群，必须有一台主其他的都是从
+2、 Eureka各个节点是平等关系,服务器挂了没关系，只要有一台Eureka就可以保证服务可用，数据都；是最新的。 如果查询到的数据并不是最新的，就是因为Eureka的自我保护模式导致的
+3、 Eureka本质上是一个工程,而ZooKeeper只是一个进程；
+4、 Eureka可以很好的应对因网络故障导致部分节点失去联系的情况,而不会像ZooKeeper一样使得整；个注册系统瘫痪
+5、 ZooKeeper保证的是CP，Eureka保证的是AP；CAP： C：一致性>Consistency; 取舍：(强一致性、单调一致性、会话一致性、最终一致性、弱一致性) A：可用性>Availability; P：分区容错性>Partition tolerance;
+
+-  什么是断路器
+当一个服务调用另一个服务由于网络原因或自身原因出现问题，调用者就会等待被调用者的响应当更多的服务请求到这些资源导致更多的请求等待，发生连锁效应（雪崩效应）
+断路器有三种状态
+打开状态：一段时间内 达到一定的次数无法调用 并且多次监测没有恢复的迹象 断路器完全打开 那么下次请求就不会请求到该服务
+半开状态：短时间内 有恢复迹象 断路器会将部分请求发给该服务，正常调用时 断路器关闭
+关闭状态：当服务一直处于正常状态 能正常调用
+
+- 谈谈服务雪崩效应
+雪崩效应是在大型互联网项目中，当某个服务发生宕机时，调用这个服务的其他服务也会发生宕机，大型项目的微服务之间的调用是互通的，这样就会将服务的不可用逐步扩大到各个其他服务中，从而使整个项目的服务宕机崩溃.发生雪崩效应的原因有以下几点
+单个服务的代码存在bug.
+请求访问量激增导致服务发生崩溃(如大型商城的枪红包，秒杀功能).
+服务器的硬件故障也会导致部分服务不可用.
+
+-----------------------------------------------------------------------------------------------
+Kafka
+- Kafka 基本概念：
+Producer ：生产者，负责将消息发送到 Broker
+Consumer ：消费者，从 Broker 接收消息
+Consumer Group ：消费者组，由多个 Consumer 组成。消费者组内每个消费者负责消费不同分区的数据，一个分区只能由一个组内消费者消费；消费者组之间互不影响。所有的消费者都属于某个消费者组，即消费者组是逻辑上的一个订阅者。
+Broker ：可以看做一个独立的 Kafka 服务节点或 Kafka 服务实例。如果一台服务器上只部署了一个 Kafka 实例，那么我们也可以将 Broker 看做一台 Kafka 服务器。
+Topic ：一个逻辑上的概念，包含很多 Partition，同一个 Topic 下的 Partiton 的消息内容是不相同的。
+Partition ：为了实现扩展性，一个非常大的 topic 可以分布到多个 broker 上，一个 topic 可以分为多个 partition，每个 partition 是一个有序的队列。
+Replica ：副本，同一分区的不同副本保存的是相同的消息，为保证集群中的某个节点发生故障时，该节点上的 partition 数据不丢失，且 kafka 仍然能够继续工作，kafka 提供了副本机制，一个 topic 的每个分区都有若干个副本，一个 leader 和若干个 follower。
+Leader ：每个分区的多个副本中的"主副本"，生产者以及消费者只与 Leader 交互。
+Follower ：每个分区的多个副本中的"从副本"，负责实时从 Leader 中同步数据，保持和 Leader 数据的同步。Leader 发生故障时，从 Follower 副本中重新选举新的 Leader 副本对外提供服务。
+
+- 那 Kafka 是怎么去实现负载均衡的？
+共三个broker ，里面各有三个副本，总共有三个 partation， 深色的是 leader，浅色的是 follower，上下灰色分别代表生产者和消费者，虚线代表 follower 从 leader 拉取消息。
+Kafka 的负责均衡主要是通过分区来实现的，我们知道 Kafka 是主写主读的架构
+我们从这张图就可以很明显的看出来，每个 broker 都有消费者拉取消息，每个 broker 也都有生产者发送消息，每个 broker 上的读写负载都是一样的，这也说明了 kafka 独特的架构方式可以通过主写主读来实现负载均衡。去实现负载均衡的？
